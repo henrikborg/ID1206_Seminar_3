@@ -159,8 +159,8 @@ void green_cond_wait(green_cond_t* cond_queue) {
     cond_queue->last = running;
     cond_queue->next = running;
   } else {
-    cond_queue->last->next = running;
-    cond_queue->last = running;
+    cond_queue->last->next = running; // add to end of list
+    cond_queue->last = running;       // update end of list
   }
 
   green_t *susp = running;
@@ -176,12 +176,28 @@ void green_cond_signal(green_cond_t* cond_queue) {
   printf("green_cond_signal\n");
 
   if(NULL != cond_queue->next) {
-    add_to_end_of_ready_queue(cond_queue->next);
+    //add_to_end_of_ready_queue(cond_queue->next);
+    //green_t *next = susp->next;
+
+    // select next thread for execution
+    green_t *next = cond_queue->next;
+
     if(cond_queue->next != cond_queue->last) {
-      cond_queue->next->last = cond_queue->last;  // update last pointer
+      //cond_queue->next = cond_queue->next->next;  // update last pointer
       cond_queue->next = cond_queue->next->next;  // update present pointer
     }
+
+/*    green_t *susp = running;
+
+    // add susp to ready queue
+    add_to_end_of_ready_queue(susp);
+
+    // select next thread for execution
+    //green_t *next = cond_queue->next;
+
+    running = next;
+    swapcontext(susp->context, next->context);
+    */
   }
-  
 }
 

@@ -18,6 +18,7 @@ void *test(void *arg) {
       //green_yield();
       green_cond_signal(&cond);
     } else {
+      //flag = (id + 1) % 2;
       green_cond_wait(&cond);
     }
   }
