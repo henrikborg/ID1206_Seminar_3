@@ -13,10 +13,9 @@ static ucontext_t main_cntx = {0};
 static green_t main_green = {&main_cntx, NULL, NULL, NULL, NULL, FALSE};
 static green_t *running = &main_green;
 //static queue readyqueue;
+green_t *ready_queue_end;
 
 static void init() __attribute__((constructor));
-
-green_t *ready_queue_end;
 
 void init() {
   getcontext(&main_cntx);
@@ -147,3 +146,42 @@ int green_join(green_t *thread, void **res) {
   }
   return 0;
 }
+
+void green_cond_init(green_cond_t* cond_queue) {
+  cond_queue = (green_cond_t*)malloc(sizeof(green_cond_t));
+  cond_queue->next = NULL;
+  cond_queue->last = NULL;
+}
+
+void green_cond_wait(green_cond_t* cond_queue) {
+  printf("green_cond_wait\n");
+  if(NULL == cond_queue->next) {
+    cond_queue->last = running;
+    cond_queue->next = running;
+  } else {
+    cond_queue->last->next = running;
+    cond_queue->last = running;
+  }
+
+  green_t *susp = running;
+
+  // select next thread for execution
+  green_t *next = susp->next;
+
+  running = next;
+  swapcontext(susp->context, next->context);
+}
+
+void green_cond_signal(green_cond_t* cond_queue) {
+  printf("green_cond_signal\n");
+
+  if(NULL != cond_queue->next) {
+    add_to_end_of_ready_queue(cond_queue->next);
+    if(cond_queue->next != cond_queue->last) {
+      cond_queue->next->last = cond_queue->last;  // update last pointer
+      cond_queue->next = cond_queue->next->next;  // update present pointer
+    }
+  }
+  
+}
+
