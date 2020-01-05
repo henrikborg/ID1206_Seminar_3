@@ -58,6 +58,9 @@ if(NULL == ready_queue_end) {
 The simple answer here is no, and yes. It depends on if we need to do it in a constant and very well defined length of time? If we are develing an application for a real time system with hard dead lines, then we have to perform calculation in a formal way to prove that the system will survive for ever, or at least till it is put out of use for other reasons then bad development. In this case we want to do it in a constant and very well define length of time, in clock cycles. Or if we are delevoping a system with a huge amount of threads so the time it takes to traverse huge queue of threads will have a bad enungh impact on the over all system, then we also want to do it in constant time. We can do it in constant time by keeping track of the end of the list.\\
 
 \section*{3 Suspending on a condition}
+\textbf{Is it safe to run multi-threaded programs without locks?}\\
+The answer to this question is easier than one can think. It is YES, but on one condition: no shared resources!\\
+\\
 
 
 
