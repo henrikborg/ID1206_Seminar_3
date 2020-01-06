@@ -9,18 +9,22 @@ void *test(void *arg) {
   int loop = 4;
   int flag = 0;
   int id = *(int*)arg;
+  int counter = 0;
 
   while(loop > 0) {
     if(flag == id) {
       printf("thread %d: %d\n", id, loop);
-      loop--;
-      flag = (id + 1) % 2;
       //green_yield();
-      green_cond_signal(&cond);
     } else {
-      //flag = (id + 1) % 2;
+      //flag = (flag + 1) % 2;
+      printf("Suspend on cond %d, flag is %d, loop is %d\n", id, flag, loop);
       green_cond_wait(&cond);
     }
+    counter++;
+    loop--;
+    flag = (id + 1) % 2;
+    printf("Signal on cond %d, flag is %d, loop is %d\n", id, flag, loop);
+    green_cond_signal(&cond);
   }
 }
 

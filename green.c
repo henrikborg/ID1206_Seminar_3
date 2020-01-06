@@ -15,10 +15,31 @@ static green_t *running = &main_green;
 //static queue readyqueue;
 green_t *ready_queue_end;
 
+#ifdef TIMER
+  static sigset_t block;
+
+  void timer_handler(int);
+#endif
+
 static void init() __attribute__((constructor));
 
 void init() {
   getcontext(&main_cntx);
+
+#ifdef TIMER
+  sigemptyset(&block);
+  sigaddset(&block, SIGVTALRM);
+
+  struct sigaction act = {0};
+  act.sa_handler = timer_handler;
+  assert(sigaction(SIGVTALRM, &act, NULL) == 0);
+
+  struct timerval interval;
+  sigprocmask(SIG_UNBLOCK, &block, NULL);
+#else
+  //int green_disable_timer() {}
+  //int green_enable_timer() {}
+#endif
 }
 
 void add_to_end_of_ready_queue(green_t *new) {
@@ -60,10 +81,9 @@ void green_thread() {
   this->zombie = 1;
 
   // free allocated memory structure
-  //free(this->context);
   if(NULL != this->join)
     if(1 == this->join->zombie)
-      free(this->join);
+      this->join = NULL;
 
   // we're  a zombie
   //TODO
@@ -92,7 +112,7 @@ int green_create(green_t *new, void *(*fun)(void*), void *arg) {
   new->fun      = fun;
   new->arg      = arg;
   new->next     = NULL;
-  new->join    = NULL;
+  new->join     = NULL;
   new->retval   = NULL;
   new->zombie   = FALSE;
 
@@ -111,39 +131,51 @@ int green_yield() {
 
   // select next thread for execution
   green_t *next = susp->next;
-  
+
   running = next;
   swapcontext(susp->context, next->context);
   return 0;
 }
 
-int green_join(green_t *thread, void **res) {
+int green_join(green_t *thread, void **retval) {
   printf("green_join\n");
-  if(thread->zombie) {
+/*  if(thread->zombie) {
     // collect the result
     // TODO
     res = thread->retval;
-    
+
     return 0;
   }
+*/
+  if(!thread->zombie) {
+    green_t *susp = running;
+    // add as joining thread
+    // TODO
+    susp->join = thread;  // ??? or is it the other way around ???
+    //thread->join = susp;  // johanmon
 
-  green_t *susp = running;
-  // add as joining thread
-  // TODO
-  susp->join = thread;  // ??? or is it the other way around ???
-  //thread->join = susp;
+    while(1 != susp->join->zombie)
+      green_yield();
+    // select the next thread for execution
+    // TODO
+    if(NULL != susp) {
+      green_t *next = susp->next;
 
-  while(1 != susp->join->zombie)
-  green_yield();
-  // select the next thread for execution
-  // TODO
-  if(NULL != susp) {
-    green_t *next = susp->next;
-
-    running = next;
-    if(NULL != next)
-      swapcontext(susp->context, next->context);
+      running = next;
+      if(NULL != next)
+        swapcontext(susp->context, next->context);
+    }
   }
+
+  if(NULL != retval) {
+    *retval = thread->retval;
+    thread->retval = NULL;
+  }
+
+  free((void*)thread->context->uc_stack.ss_sp);
+  free((void*)thread->context->uc_stack.ss_size);
+  free(thread->context);
+  thread->context = NULL;
   return 0;
 }
 
@@ -156,28 +188,26 @@ void green_cond_init(green_cond_t* cond_queue) {
 void green_cond_wait(green_cond_t* cond_queue) {
   printf("green_cond_wait\n");
   if(NULL == cond_queue->next) {
-    cond_queue->last = running;
     cond_queue->next = running;
   } else {
     cond_queue->last->next = running; // add to end of list
-    cond_queue->last = running;       // update end of list
   }
+  cond_queue->last = running;       // update end of list
 
-  green_t *susp = running;
+/*  green_t *susp = running;
 
   // select next thread for execution
   green_t *next = susp->next;
 
   running = next;
   swapcontext(susp->context, next->context);
-}
+*/}
 
 void green_cond_signal(green_cond_t* cond_queue) {
   printf("green_cond_signal\n");
 
   if(NULL != cond_queue->next) {
     //add_to_end_of_ready_queue(cond_queue->next);
-    //green_t *next = susp->next;
 
     // select next thread for execution
     green_t *next = cond_queue->next;
@@ -185,9 +215,13 @@ void green_cond_signal(green_cond_t* cond_queue) {
     if(cond_queue->next != cond_queue->last) {
       //cond_queue->next = cond_queue->next->next;  // update last pointer
       cond_queue->next = cond_queue->next->next;  // update present pointer
+    } else {
+      // reached end of queue
+      cond_queue->next = NULL;
+      cond_queue->last = NULL;
     }
 
-/*    green_t *susp = running;
+    green_t *susp = running;
 
     // add susp to ready queue
     add_to_end_of_ready_queue(susp);
@@ -197,7 +231,6 @@ void green_cond_signal(green_cond_t* cond_queue) {
 
     running = next;
     swapcontext(susp->context, next->context);
-    */
   }
 }
 
