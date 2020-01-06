@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "green.h"
 
-static green_cond_t cond_queue;
 green_cond_t cond;
 
 /* 2.4 */
@@ -27,10 +26,10 @@ void *test(void *arg) {
     if(flag == id) {
       printf("thread %d: %d\n", id, loop);
       loop--;
-      flag = (id + 1) % 4;
+      flag = (id + 1) % 3;
       green_cond_signal(&cond);
     } else {
-      flag = (id + 1) % 4;
+      flag = (id + 1) % 3;
       green_cond_wait(&cond);
     }
   }
@@ -70,16 +69,16 @@ int main() {
   int a2 = 2;
   int a3 = 3;
 
-  green_cond_init(&cond_queue);
+  green_cond_init(&cond);
 
   green_create(&g0, test, &a0);
-  //green_create(&g1, test, &a1);
-  //green_create(&g2, test, &a2);
+  green_create(&g1, test, &a1);
+  green_create(&g2, test, &a2);
   //green_create(&g3, test, &a3);
 
   green_join(&g0, NULL);
-  //green_join(&g1, NULL);
-  //green_join(&g2, NULL);
+  green_join(&g1, NULL);
+  green_join(&g2, NULL);
   //green_join(&g3, NULL);
 
   printf("done\n");
