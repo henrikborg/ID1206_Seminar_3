@@ -9,15 +9,15 @@ typedef struct green_t {
   void *retval;
   int zombie;
 } green_t;
-/*
+
 typedef struct green_thread_queue {
   struct green_t *next;
   struct green_t *end;
 } green_thread_queue_t;
-*/
+
 typedef struct cond {
   struct green_t *next;
-  struct green_t *last ;
+  struct green_t *end;
 } green_cond_t;
 
 int green_create(green_t *thread, void *(*fun)(void*), void *arg);

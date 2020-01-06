@@ -13,7 +13,8 @@ static ucontext_t main_cntx = {0};
 static green_t main_green = {&main_cntx, NULL, NULL, NULL, NULL, FALSE};
 static green_t *running = &main_green;
 //static queue readyqueue;
-green_t *ready_queue_end;
+//green_t *ready_queue_end;
+green_thread_queue_t ready_queue;
 
 #ifdef TIMER
   static sigset_t block;
@@ -44,24 +45,24 @@ void init() {
 
 void add_to_end_of_ready_queue(green_t *new) {
   printf("add to end of queue\n");
-  if(NULL == ready_queue_end) {
+/*  if(NULL == ready_queue_end) {
     ready_queue_end = new;
     ready_queue_end->next = NULL;//new;
     running->next = new;
   } else {
     ready_queue_end->next = new;
     ready_queue_end = new;
-  }
+  }*/
 
   // Add new to the readyqueue queue
-/*  if (readyqueue.first == NULL) {
-    readyqueue.first = running;
-    running->next = new;
-    readyqueue.last = new;
+  if(ready_queue.next == NULL) {
+    ready_queue.next = new;
+    //running->next = new;
+    ready_queue.end = new;
   } else {
-    readyqueue.last->next = new;
-    readyqueue.last = new;
-  }*/
+    ready_queue.end->next = new;
+    ready_queue.end = new;
+  }
 }
 
 void green_thread() {
@@ -127,12 +128,16 @@ int green_create(green_t *new, void *(*fun)(void*), void *arg) {
 
 green_t* schedule() {
   // select next thread for execution
-  green_t *next = running->next;
+  green_t *next = ready_queue.next;
 
-  if(next == ready_queue_end) {
+  if(next == ready_queue.end) {
     // reached end of queue
-    ready_queue_end = NULL;
+    ready_queue.next = NULL;
+    ready_queue.end = NULL;
     printf("NULL\n");
+  } else {
+  if(NULL != next)
+    ready_queue.next = ready_queue.next->next;
   }
 
   return next;
@@ -200,33 +205,67 @@ int green_join(green_t *thread, void **retval) {
 void green_cond_init(green_cond_t* cond_queue) {
   cond_queue = (green_cond_t*)malloc(sizeof(green_cond_t));
   cond_queue->next = NULL;
-  cond_queue->last = NULL;
+  cond_queue->end = NULL;
 }
 
-void green_cond_wait(green_cond_t* cond_queue) {
+green_t* cond_schedule(green_cond_t *cond) {
+  // select next thread for execution
+  green_t *next = cond->next;
+
+  if(next == cond->end) {
+    // reached end of queue
+    cond->next = NULL;
+    cond->end = NULL;
+    printf("NULL\n");
+  } else {
+    cond->next = cond->next->next;
+  }
+
+  return next;
+}
+
+void add_to_end_of_cond_queue(green_cond_t *cond, green_t *new) {
+  printf("add to end of queue\n");
+
+  // Add new to the readyqueue queue
+  if(cond->next == NULL) {
+    cond->next = running;
+    //running->next = new;
+    cond->end = new;
+  } else {
+    cond->end->next = new;
+    cond->end = new;
+  }
+}
+
+
+void green_cond_wait(green_cond_t* cond) {
   printf("green_cond_wait\n");
-  if(NULL == cond_queue->next) {
+  /*if(NULL == cond_queue->next) {
     cond_queue->next = running;
   } else {
     cond_queue->last->next = running; // add to end of list
   }
   cond_queue->last = running;       // update end of list
+  */
+  add_to_end_of_cond_queue(cond, running);
 
   green_t *susp = running;
 
   // select next thread for execution
-  green_t *next = susp->next;
+  green_t *next = ready_queue.next;//susp->next;
 
   running = next;
+
   if(susp != next)
   if(NULL != susp && NULL != next)
     swapcontext(susp->context, next->context);
 }
 
-void green_cond_signal(green_cond_t* cond_queue) {
+void green_cond_signal(green_cond_t* cond) {
   printf("green_cond_signal\n");
 
-  if(NULL != cond_queue->next) {
+  /*if(NULL != cond_queue->next) {
     //add_to_end_of_ready_queue(cond_queue->next);
 
     // select next thread for execution
@@ -252,7 +291,15 @@ void green_cond_signal(green_cond_t* cond_queue) {
 
     running = next;
     swapcontext(susp->context, next->context);
-  }
+  }*/
+
+  green_t *susp = running;
+
+  // select next thread for execution
+  green_t *next = cond_schedule(cond);
+
+  running = next;
+  swapcontext(susp->context, next->context);
 }
 
 #ifdef TIMER

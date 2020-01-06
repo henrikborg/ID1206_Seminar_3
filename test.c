@@ -4,7 +4,7 @@
 green_cond_t cond;
 
 /* 2.4 */
-void *test_2(void *arg) {
+void *test(void *arg) {
   int i = *(int*)arg;
   int loop = 4;
 
@@ -18,7 +18,7 @@ void *test_2(void *arg) {
 /* 3 */
 int flag = 0;
 
-void *test(void *arg) {
+void *test_3(void *arg) {
   int id = *(int*)arg;
   int loop = 4;
 
@@ -26,10 +26,10 @@ void *test(void *arg) {
     if(flag == id) {
       printf("thread %d: %d\n", id, loop);
       loop--;
-      flag = (id + 1) % 3;
+      flag = (flag + 1) % 3;
       green_cond_signal(&cond);
     } else {
-      flag = (id + 1) % 3;
+      //flag = (flag + 1) % 3;
       green_cond_wait(&cond);
     }
   }
