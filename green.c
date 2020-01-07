@@ -134,7 +134,7 @@ green_t* schedule() {
     // reached end of queue
     ready_queue.next = NULL;
     ready_queue.end = NULL;
-    printf("NULL\n");
+    printf("READY SCHEDULE EMPTY\n");
   } else {
   if(NULL != next)
     ready_queue.next = ready_queue.next->next;
@@ -216,7 +216,7 @@ green_t* cond_schedule(green_cond_t *cond) {
     // reached end of queue
     cond->next = NULL;
     cond->end = NULL;
-    printf("NULL\n");
+    printf("COND SCHEDULE EMPTY\n");
   } else {
     cond->next = cond->next->next;
   }
@@ -297,6 +297,8 @@ void green_cond_signal(green_cond_t* cond) {
 
   // select next thread for execution
   green_t *next = cond_schedule(cond);
+  if(NULL == next)
+    next = schedule();
 
   running = next;
   swapcontext(susp->context, next->context);

@@ -4,7 +4,7 @@
 green_cond_t cond;
 
 /* 2.4 */
-void *test(void *arg) {
+void *test_2(void *arg) {
   int i = *(int*)arg;
   int loop = 4;
 
@@ -18,7 +18,7 @@ void *test(void *arg) {
 /* 3 */
 int flag = 0;
 
-void *test_3(void *arg) {
+void *test(void *arg) {
   int id = *(int*)arg;
   int loop = 4;
 
