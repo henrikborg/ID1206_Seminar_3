@@ -3,8 +3,9 @@
 
 green_cond_t cond;
 
-/* 2.4 */
-void *test_2(void *arg) {
+/* TASK 2.4 */
+#ifdef TASK2
+void *test(void *arg) {
   int i = *(int*)arg;
   int loop = 4;
 
@@ -14,8 +15,10 @@ void *test_2(void *arg) {
     green_yield();
   }
 }
+#endif
 
-/* 3 */
+/* TASK 3 */
+#ifdef TASK3
 int flag = 0;
 
 void *test(void *arg) {
@@ -34,9 +37,13 @@ void *test(void *arg) {
     }
   }
 }
+#endif
 
-/* 4 */
-void *test_4(void *arg) {
+/* TASK 4 */
+#ifdef TASK4
+int flag = 0;
+
+void *test(void *arg) {
   int i = *(int*)arg;
   int loop = 4;
   int flag = 0;
@@ -61,6 +68,7 @@ void *test_4(void *arg) {
     //green_cond_signal(&cond);
   }
 }
+#endif
 
 int main() {
   green_t g0, g1, g2, g3;
@@ -81,6 +89,16 @@ int main() {
   green_join(&g2, NULL);
   //green_join(&g3, NULL);
 
+#ifdef TASK2
+  printf("TASK 2 ");
+#endif
+#ifdef TASK3
+  printf("TASK 3 ");
+#endif
+#ifdef TASK4
+  printf("TASK 4 ");
+#endif
   printf("done\n");
+
   return 0;
 }

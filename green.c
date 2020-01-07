@@ -59,7 +59,7 @@ void init() {
 
 
 void add_to_end_of_ready_queue(green_t *new) {
-  printf("add to end of queue\n");
+//  printf("add to end of queue\n");
 /*  if(NULL == ready_queue_end) {
     ready_queue_end = new;
     ready_queue_end->next = NULL;//new;
@@ -81,7 +81,7 @@ void add_to_end_of_ready_queue(green_t *new) {
 }
 
 void green_thread() {
-  printf("green_thread\n");
+//  printf("green_thread\n");
   green_disable_timer();
 
   green_t *this = running;
@@ -120,7 +120,7 @@ void green_thread() {
 }
 
 int green_create(green_t *new, void *(*fun)(void*), void *arg) {
-  printf("green_create\n");
+//  printf("green_create\n");
   green_disable_timer();
 
   ucontext_t *cntx = (ucontext_t *)malloc(sizeof(ucontext_t));
@@ -156,7 +156,7 @@ green_t* schedule() {
     // reached end of queue
     ready_queue.next = NULL;
     ready_queue.end = NULL;
-    printf("READY SCHEDULE EMPTY\n");
+//    printf("READY SCHEDULE EMPTY\n");
   } else {
   if(NULL != next)
     ready_queue.next = ready_queue.next->next;
@@ -166,7 +166,7 @@ green_t* schedule() {
 }
 
 int green_yield() {
-  printf("green_yield\n");
+//  printf("green_yield\n");
   green_disable_timer();
 
   green_t *susp = running;
@@ -186,7 +186,7 @@ int green_yield() {
 }
 
 int green_join(green_t *thread, void **retval) {
-  printf("green_join\n");
+//  printf("green_join\n");
 /*  if(thread->zombie) {
     // collect the result
     // TODO
@@ -247,7 +247,7 @@ green_t* cond_schedule(green_cond_t *cond) {
     // reached end of queue
     cond->next = NULL;
     cond->end = NULL;
-    printf("COND SCHEDULE EMPTY\n");
+//    printf("COND SCHEDULE EMPTY\n");
   } else {
     cond->next = cond->next->next;
   }
@@ -256,7 +256,7 @@ green_t* cond_schedule(green_cond_t *cond) {
 }
 
 void add_to_end_of_cond_queue(green_cond_t *cond, green_t *new) {
-  printf("add to end of queue\n");
+//  printf("add to end of queue\n");
 
   // Add new to the readyqueue queue
   if(cond->next == NULL) {
@@ -271,7 +271,7 @@ void add_to_end_of_cond_queue(green_cond_t *cond, green_t *new) {
 
 
 void green_cond_wait(green_cond_t* cond) {
-  printf("green_cond_wait\n");
+//  printf("green_cond_wait\n");
   /*if(NULL == cond_queue->next) {
     cond_queue->next = running;
   } else {
@@ -298,7 +298,7 @@ void green_cond_wait(green_cond_t* cond) {
 }
 
 void green_cond_signal(green_cond_t* cond) {
-  printf("green_cond_signal\n");
+//  printf("green_cond_signal\n");
 
   /*if(NULL != cond_queue->next) {
     //add_to_end_of_ready_queue(cond_queue->next);
