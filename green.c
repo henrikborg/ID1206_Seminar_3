@@ -1,3 +1,5 @@
+#include <signal.h>
+#include <sys/time.h>
 #include <stdlib.h>
 #include <ucontext.h>
 #include <assert.h>
@@ -6,8 +8,8 @@
 
 #define FALSE 0
 #define TRUE 1
-
 #define STACK_SIZE 4096
+#define PERIOD 100
 
 static ucontext_t main_cntx = {0};
 static green_t main_green = {&main_cntx, NULL, NULL, NULL, NULL, FALSE};
@@ -37,11 +39,24 @@ void init() {
 
   struct timerval interval;
   sigprocmask(SIG_UNBLOCK, &block, NULL);
-#else
-  //int green_disable_timer() {}
-  //int green_enable_timer() {}
+  interval.tv_sec = 0;
+  interval.tv_usec = PERIOD;
+
+  struct itimerval period;
+  period.it_interval = interval;
+  period.it_value = interval;
+  setitimer(ITIMER_VIRTUAL, &period, NULL),
 #endif
 }
+
+#ifdef TIMER
+  int green_disable_timer() {sigprocmask(SIG_BLOCK, &block, NULL);}
+  int green_enable_timer () {sigprocmask(SIG_BLOCK, &block, NULL);}
+#else
+  int green_disable_timer() {}
+  int green_enable_timer() {}
+#endif
+
 
 void add_to_end_of_ready_queue(green_t *new) {
   printf("add to end of queue\n");
@@ -67,13 +82,14 @@ void add_to_end_of_ready_queue(green_t *new) {
 
 void green_thread() {
   printf("green_thread\n");
+  green_disable_timer();
+
   green_t *this = running;
 
   void* result = (*this->fun)(this->arg);
-  this->retval = result
-  ;
+  this->retval = result;
+
   // place waiting (joining) thread in ready queue
-  //TODO
   if(NULL != this->join) {
     add_to_end_of_ready_queue(this->join);
     this->join = NULL;
@@ -99,10 +115,14 @@ void green_thread() {
 
   running = next;
   setcontext(next->context);
+
+  green_enable_timer();
 }
 
 int green_create(green_t *new, void *(*fun)(void*), void *arg) {
   printf("green_create\n");
+  green_disable_timer();
+
   ucontext_t *cntx = (ucontext_t *)malloc(sizeof(ucontext_t));
   getcontext(cntx);
 
@@ -122,6 +142,8 @@ int green_create(green_t *new, void *(*fun)(void*), void *arg) {
 
   // add new to the ready queue
   add_to_end_of_ready_queue(new);
+
+  green_enable_timer();
 
   return 0;
 }
@@ -145,6 +167,8 @@ green_t* schedule() {
 
 int green_yield() {
   printf("green_yield\n");
+  green_disable_timer();
+
   green_t *susp = running;
 
   // add susp to ready queue
@@ -155,6 +179,9 @@ int green_yield() {
 
   running = next;
   swapcontext(susp->context, next->context);
+
+  green_enable_timer();
+
   return 0;
 }
 
@@ -168,6 +195,8 @@ int green_join(green_t *thread, void **retval) {
     return 0;
   }
 */
+  green_disable_timer();
+
   if(!thread->zombie) {
     green_t *susp = running;
     // add as joining thread
@@ -198,6 +227,8 @@ int green_join(green_t *thread, void **retval) {
   //free((void*)thread->context->uc_stack.ss_size);
   free(thread->context);
   thread->context = NULL;
+
+  green_enable_timer();
 
   return 0;
 }
@@ -248,6 +279,8 @@ void green_cond_wait(green_cond_t* cond) {
   }
   cond_queue->last = running;       // update end of list
   */
+  green_disable_timer();
+
   add_to_end_of_cond_queue(cond, running);
 
   green_t *susp = running;
@@ -260,6 +293,8 @@ void green_cond_wait(green_cond_t* cond) {
   if(susp != next)
   if(NULL != susp && NULL != next)
     swapcontext(susp->context, next->context);
+
+  green_enable_timer();
 }
 
 void green_cond_signal(green_cond_t* cond) {
@@ -292,6 +327,7 @@ void green_cond_signal(green_cond_t* cond) {
     running = next;
     swapcontext(susp->context, next->context);
   }*/
+  green_disable_timer();
 
   green_t *susp = running;
 
@@ -309,6 +345,8 @@ void green_cond_signal(green_cond_t* cond) {
 
   running = next;
   swapcontext(susp->context, next->context);
+
+  green_enable_timer();
 }
 
 #ifdef TIMER
@@ -316,9 +354,9 @@ void timer_handler(int sig) {
   gree_t *susp = running;
   add_to_end_of_ready_queue(susp);
 
-  if(NULL != cond_queue->next) {
-    //add_to_end_of_ready_queue(cond_queue->next);
+  green_t *next = schedule();
 
+/*  if(NULL != next) {
     // select next thread for execution
     green_t *next = cond_queue->next;
 
@@ -332,7 +370,7 @@ void timer_handler(int sig) {
       cond_queue->last = NULL;
     }
   }
-
+*/
   running = next;
   swapcontext(susp->context, next->context);
 }
