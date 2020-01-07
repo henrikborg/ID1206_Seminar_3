@@ -296,9 +296,16 @@ void green_cond_signal(green_cond_t* cond) {
   green_t *susp = running;
 
   // select next thread for execution
+  // move first suspended thread to end of ready queue
   green_t *next = cond_schedule(cond);
+  if(NULL != next)
+    add_to_end_of_ready_queue(next);
+
+  next = schedule();
   if(NULL == next)
-    next = schedule();
+    next = cond_schedule(cond);
+
+  add_to_end_of_ready_queue(susp);
 
   running = next;
   swapcontext(susp->context, next->context);
