@@ -7,25 +7,28 @@
 \usepackage{listings}
 \usepackage{underscore}
 \usepackage{listings}
+\usepackage{lastpage}
 
-\title{{\HUGE Seminarie 2}\\ \begin{Large}
-Operativsystem
-\end{Large}}
-\author{Henrik Borg}
+\title{{\Huge \textbf{Seminarie 2}}\\ \begin{LARGE}
+\textbf{Operativsystem}
+\end{LARGE}}
+\author{\begin{Large}Henrik Borg\end{Large}}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \usepackage{lastpage}
 \lfoot{Henrik Borg\\hborg@kth.se\\+46(0)70 741 8370}
 \cfoot{ID1206\\Operativsystem\\Seminarie 2}
-\rfoot{Sida \thepage/4}
+\rfoot{Sida \thepage/\pageref{LastPage}}
 \begin{document}
 
 \maketitle
 \begin{center}
 \\[5\baselineskip]
-\section*{Or...}
+\section*{{\huge Or...}}
+\begin{LARGE}
 No problem - On one condition\\
 No shared resources\\
+\end{LARGE}
 \end{center}
 
 \pagebreak\\
@@ -78,10 +81,13 @@ typedef struct green_thread_queue {
 In this task we will on top of the wait- and signal-commands add a periodic timer that triggers a timer interrupt handler who is a scheduler of type Round Robin that put the running task back into the ready queue and activate the next task in the ready queue.\\
 \\
 \textbf{Can this lead to problems?}
-Yes, if we do not understand the implications of this. But it is often quite easily handled. Every time we will work on a shared resource we must somehow take care the timer interrupt problme. In this task the shared recourses are the queues. Before we touch the shared resource we must first turn off the timer interrupt and then turn the timer interrupt back on again then these actions are done.\\
+Yes, if we do not understand the implications of this. But it is often quite easily handled. Every time we will work on a shared resource we must somehow take care the timer interrupt problme. In this task the shared recourses are the queues and our global variable 'running'. Before we touch the shared resource we must first turn off the timer interrupt and then turn the timer interrupt back on again then these actions are done.\\
 \\
 \textbf{Can these handling of the timer interrupt lead to any problem?}
-Yes it can. If the time while the timer interrupt is turned off streches over two timer interrupts will lead to a missed interrupt, possibly leading to problems. A similar problem occurs then the time while the timer interrupt is turn off streches over one timer interrpt and is long enough so the task or tasks that should be handled in the next time period can not finish in time before the next timer interrupt, possibly leading to problems. These are two common problem while developing real time systems with firm or hard deadlines, for soft deadlines it is no problem since breaking soft deadlines can not affect a system negatively.
+Yes it can. If the time while the timer interrupt is turned off streches over two timer interrupts will lead to a missed interrupt, possibly leading to problems. A similar problem occurs then the time while the timer interrupt is turn off streches over one timer interrpt and is long enough so the task or tasks that should be handled in the next time period can not finish in time before the next timer interrupt, possibly leading to problems. These are two common problem while developing real time systems with firm or hard deadlines, for soft deadlines it is no problem since breaking soft deadlines can not affect a system negatively.\\
+\\
+\textbf{How to handle this problem in a good way?}
+It depends on the application. One example is if we read some shard resources, do some calculations and then write to some othere shared resources. Then we should do all the reading in the beginning of the task, and all the writing at the end of the task while only disable the interrupt during the reading respectively the writing. In or case then we issue a read modify write of te shared resources, we must disable the interrupt from the first reading to the last writing, and we should do this in as short time as possible, meaning doing all the precalculations on beforehand and all postcaclulations after.
 
 \section*{5 A mutex lock}
 
