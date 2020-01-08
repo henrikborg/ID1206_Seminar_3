@@ -33,7 +33,7 @@ if [ ! -z  "$ARGS" ]; then
   echo "Arguments ${ARGS}"
 fi;
 
-if gcc -g -c green.c; then
+if gcc $ARGS -g -c green.c; then
   if gcc $ARGS -g -o test green.o green.h test.c ; then
     echo "SUCCESS"
   else
