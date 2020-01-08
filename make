@@ -2,20 +2,16 @@
 
 # USAGE
 #
-# ./make 2 for task 2
-# ./make 3 for task 3
+# ./make 2 2 for task 2 with 2 threads
+# ./make 3 2 for task 3 with 2 threads
 # ...
 #
 # For using your own set of parameters to the linker and the precompiler
 # Do not forget to set the -DTASK# for choosing the wanted task
-# ./make -DTASK4 -DTIMER -lpthread for task 4
+# ./make -DTASK4 -D2 -DTIMER -lpthread for task 4 with 2 threads
 
 #Initial arguments
 ARGS=""
-
-I=$[$1+1]
-i=0
-#echo "I=$I 0=${0} 1=${1} 2=${2} 3=${3}"
 
 if [[ $1 =~ '^[0-9]+$' ]]; then
   for var in "$@"
@@ -24,10 +20,12 @@ if [[ $1 =~ '^[0-9]+$' ]]; then
   ARGS="$ARGS"" ""$var"
   done
 else
+  #THREADS=$2
   case $1 in
-    2) ARGS="$ARGS"" ""-DTASK2" ;;
-    3) ARGS="$ARGS"" ""-DTASK3" ;;
-    4) ARGS="$ARGS"" ""-DTASK4 -DTIMER -lpthread" ;;
+    2) ARGS="$ARGS"" ""-DTASK2"" ""-DTHREADS=$2" ;;
+    3) ARGS="$ARGS"" ""-DTASK3 -lpthread"" ""-DTHREADS=$2" ;;
+    4) ARGS="$ARGS"" ""-DTASK3 -DTIMER -lpthread"" ""-DTHREADS=$2" ;;
+    4_1) ARGS="$ARGS"" ""-DTASK4_1 -DTIMER -lpthread"" ""-DTHREADS=$2" ;;
   esac
 fi;
 
