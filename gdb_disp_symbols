@@ -1,0 +1,7 @@
+disp cond->next
+disp cond->end
+disp ready_queue
+disp running
+disp susp
+disp next
+

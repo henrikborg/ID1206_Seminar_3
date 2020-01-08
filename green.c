@@ -37,15 +37,14 @@ void init() {
   act.sa_handler = timer_handler;
   assert(sigaction(SIGVTALRM, &act, NULL) == 0);
 
-  struct timerval interval;
-  sigprocmask(SIG_UNBLOCK, &block, NULL);
+  struct timeval interval;
   interval.tv_sec = 0;
   interval.tv_usec = PERIOD;
 
   struct itimerval period;
   period.it_interval = interval;
   period.it_value = interval;
-  setitimer(ITIMER_VIRTUAL, &period, NULL),
+  setitimer(ITIMER_VIRTUAL, &period, NULL);
 #endif
 }
 
@@ -284,7 +283,7 @@ void green_cond_wait(green_cond_t* cond) {
   green_t *susp = running;
 
   // select next thread for execution from the ready queue
-  green_t *next = ready_queue.next;//schedule(); 
+  green_t *next = schedule();//ready_queue.next;//schedule();  // HB
 
   //if(NULL == next)
   //  next = cond_schedule(cond);
@@ -347,7 +346,7 @@ void green_cond_signal(green_cond_t* cond) {
 
 #ifdef TIMER
 void timer_handler(int sig) {
-  gree_t *susp = running;
+  green_t *susp = running;
   add_to_end_of_ready_queue(susp);
 
   green_t *next = schedule();

@@ -57,14 +57,14 @@ int flag = 0;
 void *test(void *arg) {
   int i = *(int*)arg;
   int loop = 4;
-  int flag = 0;
+  //int flag = 0;
   int id = *(int*)arg;
   int counter = 0;
 
   while(loop > 0) {
     while(1) {
       if(flag == id) {
-        printf("thread %d: %d\n", id, loop);
+        //printf("thread %d: %d\n", id, loop);
         break;
       } else {
         printf("Suspend on cond %d, flag is %d, loop is %d\n", id, flag, loop);
@@ -90,6 +90,7 @@ int main() {
   int* a_vector[] = {&a0, &a1, &a2, &a3};
 
   green_cond_init(&cond);
+  green_enable_timer();
 
   /*for(int i = 0; i < THREADS; i++) {
     green_create(g_vector[i], test, a_vector);

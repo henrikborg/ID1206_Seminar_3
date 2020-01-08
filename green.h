@@ -20,6 +20,8 @@ typedef struct cond {
   struct green_t *end;
 } green_cond_t;
 
+int green_disable_timer();
+int green_enable_timer();
 int green_create(green_t *thread, void *(*fun)(void*), void *arg);
 int green_yield();
 int green_join(green_t *thread, void **val);
