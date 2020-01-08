@@ -22,10 +22,11 @@ if [[ $1 =~ '^[0-9]+$' ]]; then
 else
   #THREADS=$2
   case $1 in
-    2) ARGS="$ARGS"" ""-DTASK2"" ""-DTHREADS=$2" ;;
-    3) ARGS="$ARGS"" ""-DTASK3 -lpthread"" ""-DTHREADS=$2" ;;
-    4) ARGS="$ARGS"" ""-DTASK3 -DTIMER -lpthread"" ""-DTHREADS=$2" ;;
+    2)   ARGS="$ARGS"" ""-DTASK2"                     " ""-DTHREADS=$2" ;;
+    3)   ARGS="$ARGS"" ""-DTASK3           -lpthread"" ""-DTHREADS=$2" ;;
+    4)   ARGS="$ARGS"" ""-DTASK3   -DTIMER -lpthread"" ""-DTHREADS=$2" ;;
     4_1) ARGS="$ARGS"" ""-DTASK4_1 -DTIMER -lpthread"" ""-DTHREADS=$2" ;;
+    5)   ARGS="$ARGS"" ""-DTASK5   -DTIMER -lpthread"" ""-DTHREADS=$2" ;;
   esac
 fi;
 
