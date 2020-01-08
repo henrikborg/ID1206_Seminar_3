@@ -28,20 +28,24 @@ void *test(void *arg) {
   //static int flag = 0;
 
   while(loop > 0) {
+    //  while(1) {
     if(flag == id) {
       printf("thread %d %d: %d\n", id, flag, loop);
       loop--;
-      //flag = (flag + 1) % THREADS;
+      flag = (flag + 1) % THREADS;
       green_cond_signal(&cond);
       //green_cond_wait(&cond);
+      //break;
     } else {
-      printf("thread %d %d: %d\n", id, flag, loop);
+      //printf("thread %d %d: %d\n", id, flag, loop);
       //flag = (flag + 1) % THREADS;
       green_cond_wait(&cond);
       //green_cond_signal(&cond);
     }
+    //}
     //loop--;
-    flag = (flag + 1) % THREADS;
+    //flag = (flag + 1) % THREADS;
+    //green_cond_signal(&cond);
   }
 }
 #endif
@@ -58,16 +62,15 @@ void *test(void *arg) {
   int counter = 0;
 
   while(loop > 0) {
-    //while(1) {
+    while(1) {
       if(flag == id) {
         printf("thread %d: %d\n", id, loop);
         break;
-        //green_yield();
       } else {
         printf("Suspend on cond %d, flag is %d, loop is %d\n", id, flag, loop);
         green_cond_wait(&cond);
       }
-    //}
+    }
     counter++;
     loop--;
     flag = (flag + 1) % THREADS;
@@ -110,11 +113,11 @@ int main() {
   printf("TASK 2 ");
 #endif
 #ifdef TASK3
-  printf("TASK 3 ");
+  printf("TASK 3/4 ");
 #endif
-#ifdef TASK4
-  printf("TASK 4 ");
-#endif
+//#ifdef TASK4
+//  printf("TASK 4 ");
+//#endif
   printf("done\n");
 
   return 0;

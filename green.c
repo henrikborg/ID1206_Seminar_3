@@ -111,8 +111,10 @@ void green_thread() {
 
   // place waiting (joining) thread in ready queue
   if(NULL != this->join) {
-    add_to_end_of_ready_queue(this->join);
-    this->join = NULL;
+    //if(1 == this->join->zombie) {
+      add_to_end_of_ready_queue(this->join);
+      this->join = NULL;
+    //}
   }
 
   // save result of execution
@@ -123,12 +125,13 @@ void green_thread() {
 
   //green_yield();
 
-/*  // find the next thread to run
-  green_t *next = schedule();
+  // find the next thread to run
+  green_t *next = schedule();//this->next;//schedule(); // HB
 
   running = next;
   setcontext(next->context);
-*/
+  green_yield();
+
   green_enable_timer();
 }
 
@@ -240,14 +243,14 @@ green_t* cond_schedule(green_cond_t *cond) {
     cond->end = NULL;
 //    printf("COND SCHEDULE EMPTY\n");
   } else {
-    if(NULL != next) {
+    //if(NULL != next) {
       cond->next = cond->next->next;
-      if(NULL == cond->next)
+    /*  if(NULL == cond->next)
         cond->end = NULL;
     } else {
       cond->next = NULL;
       cond->end = NULL;
-    }
+    }*/
   }
 
   return next;
@@ -259,7 +262,7 @@ void add_to_end_of_cond_queue(green_cond_t *cond, green_t *new) {
   // Add new to the readyqueue queue
   if(NULL != new) {
     if(cond->next == NULL) {
-      cond->next = new;
+      cond->next = running;//new;
       //new->next = NULL;
       cond->end = new;
     } else {
@@ -281,7 +284,7 @@ void green_cond_wait(green_cond_t* cond) {
   green_t *susp = running;
 
   // select next thread for execution from the ready queue
-  green_t *next = schedule(); 
+  green_t *next = ready_queue.next;//schedule(); 
 
   //if(NULL == next)
   //  next = cond_schedule(cond);
@@ -301,12 +304,33 @@ void green_cond_signal(green_cond_t* cond) {
 
   if(NULL != cond->next) {
     // select next thread for execution from the cond queue
-    green_t *susp = cond_schedule(cond);
+    //green_t *susp = cond_schedule(cond);
 
     // fake an ordinary yield
-    running = susp;
+    //running = susp;
 
-    green_yield();
+    //green_yield();
+
+
+
+    green_t *susp = running;
+
+    // select next thread for execution
+    // move first suspended thread to end of ready queue
+    green_t *next = cond_schedule(cond);
+    if(NULL != next)
+      add_to_end_of_ready_queue(next);
+
+    next = schedule();
+    if(NULL == next)
+      next = cond_schedule(cond);
+
+    add_to_end_of_ready_queue(susp);
+
+    running = next;
+    swapcontext(susp->context, next->context);
+
+
 
     // and add it to the ready queue
     //add_to_end_of_ready_queue(susp);
